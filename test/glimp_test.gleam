@@ -4,11 +4,11 @@
 //// 1. A simple switch statement identifying a day of the week based on a day
 ////number.
 //// 2. The traditional implementation of the factorial function using `while`.
-//// (see factorial_using_while_with_break)
+//// See factorial_using_while_with_break
 //// 3. The factorial function using 'do while`.
-//// (see factorial_using_do_while_with_break)
+//// See factorial_using_do_while_with_break
 //// 4. The Factorial function but this time using a for loop.
-//// (see factorial_using_for_with_break)
+//// See factorial_using_for_with_break
 
 import glimp.{type LoopState, CaseBlock}
 
@@ -25,6 +25,10 @@ pub type FactorialState {
   )
 }
 
+/// The state in these functions is represented by the variables accumulator and i.
+/// In functional programming languages, variables can't be changed so we create a
+/// FactorialState type that contains both accumulator and i and create a new state
+/// for each iteration of the loop.
 pub fn factorial_using_while_with_break(
   n: Int,
 ) -> Result(FactorialState, ErrorCheck) {
@@ -55,9 +59,10 @@ pub fn factorial_using_while_with_break(
                   // for the example, we break when i = 5 and don't calculate a new state.
                   // remove this line and we don't break at all.
                   5 -> glimp.LoopState(state: state, break: True)
-                  //note how in a while loop, the counter is updated in the code block. This is in contrast to the for loop below.
                   _ ->
                     glimp.LoopState(
+                      //Note how in a while loop, the counter is updated within the code block.
+                      //This is in contrast to the for loop below.
                       state: FactorialState(accumulator * i, i - 1),
                       break: False,
                     )
@@ -95,10 +100,11 @@ pub fn factorial_using_do_while_with_break(
                 1 -> glimp.LoopState(state: state, break: True)
                 _ ->
                   glimp.LoopState(
+                    //Note how in a while loop, the counter is updated within the code block.
+                    //This is in contrast to the for loop below.
                     state: FactorialState(accumulator * i, i - 1),
                     break: False,
                   )
-                //note how in a do while loop, the counter is updated in the code block. This is in contrast to the for loop below.
               }
             },
             post_run_condition: fn(state: FactorialState) -> Bool {
@@ -109,26 +115,6 @@ pub fn factorial_using_do_while_with_break(
   }
 }
 
-/// The next function calculates the factorial using iteration and a for loop (iterator i and an accumulator to
-/// hold the calculated value in between loops of for).
-/// E.g. in an imperative language like C, the function factorial using a for loop would be implemented as follows:
-///
-/// int factorial(int n) {
-///    if (n < 0) { return -1; } //error check, return -1 if there is an error
-///    int acc = 1;
-///    for (int i = 1; i <= n; i = i + 1) { acc = acc * i; }
-///    return acc;
-/// }
-///
-///   i = 1; is the initialization of i when starting the for loop
-///   i <= n; is the condition to check prior to running the code block. If the condition is false then the loop stops.
-///   { acc = acc * i; } is the code to execute if the condition is true (in this case multiply the value of acc with i and store in acc)
-///   i = i + 1 is what needs to happen to the variable i after the code has executed (in this case increase i by 1 and store in i)
-///
-/// The state in this snippet is the variable acc and the variable i. In functional programming languages, variables
-/// can't be changed so we create a FactorialState type that contains both acc and i and create a new state for each iteration of the for loop.
-/// The equivalent factorial function using gloop.for would be:
-///
 pub fn factorial_using_for_with_break(
   n: Int,
 ) -> Result(FactorialState, ErrorCheck) {
@@ -156,14 +142,15 @@ pub fn factorial_using_for_with_break(
                 5 -> glimp.LoopState(state: state, break: True)
                 _ ->
                   glimp.LoopState(
-                    //Note how in a for loop, the counter is NOT updated in the code block like it is in the while function
-                    //although we easily could have. This follows how the for loop works in C.
+                    //Note how in a for loop, the counter is NOT updated in the code block
+                    //like it is in the while function although we easily could have.
+                    //This follows how the for loop works in C.
                     FactorialState(accumulator: accumulator * i, i: i),
                     break: False,
                   )
               }
             },
-            post_run_code: fn(state: FactorialState) -> LoopState(
+            increment_code: fn(state: FactorialState) -> LoopState(
               FactorialState,
             ) {
               let accumulator = state.accumulator
@@ -173,8 +160,9 @@ pub fn factorial_using_for_with_break(
                 //5 -> glimp.LoopState(state: state, break: True)
                 _ ->
                   glimp.LoopState(
-                    //Note how in a for loop, the counter is NOT updated in the code block like it is in the while function
-                    //although we easily could have. This follows how the for loop works in C.
+                    //Note how in a for loop, the counter is NOT updated in the code block
+                    //like it is in the while function although we easily could have.
+                    //This follows how the for loop works in C.
                     FactorialState(accumulator: accumulator, i: i + 1),
                     break: False,
                   )
@@ -228,9 +216,9 @@ pub fn main() {
   ]
   let default = fn(_) { "Match value out of bounds" }
 
-  echo "********"
+  echo "******************"
   echo "SWITCH TEST CASES"
-  echo "********"
+  echo "******************"
 
   echo glimp.switch(expression: 1, cases: cases, default: default)
   echo glimp.switch(expression: 2, cases: cases, default: default)
@@ -274,9 +262,9 @@ pub fn main() {
   // NOTE: I added an easily removed break in the function to show how to use break
   // in the middle of a loop.
 
-  echo "********"
+  echo "****************"
   echo "WHILE TEST CASES"
-  echo "********"
+  echo "****************"
 
   echo factorial_using_while_with_break(4)
   //notice how in the next 2 lines, the function returns 5 as the last i, indicating a break at i = 5
@@ -306,9 +294,9 @@ pub fn main() {
   // NOTE: I added an easily removed break in the function to show how to use break
   // in the middle of a loop.
   //
-  echo "********"
+  echo "*******************"
   echo "DO WHILE TEST CASES"
-  echo "********"
+  echo "*******************"
 
   echo factorial_using_do_while_with_break(4)
   //notice how in the next 2 lines, the function returns 5 as the last i, indicating a break at i = 5
@@ -335,9 +323,9 @@ pub fn main() {
   // NOTE: I added an easily removed break in the function to show how to use break
   // in the middle of a loop.
 
-  echo "********"
+  echo "**************"
   echo "FOR TEST CASES"
-  echo "********"
+  echo "**************"
 
   echo factorial_using_for_with_break(4)
   //notice how in the next 2 lines, the function returns 6 as the last i, indicating a break at i = 5

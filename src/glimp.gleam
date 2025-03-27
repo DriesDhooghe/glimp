@@ -1,13 +1,12 @@
-//// The intent of this module called `Glimp`, short for Gleam Imperative is to
-//// provide close alternatives to the traditional C features `while`,
+//// The intent of this module called `Glimp`, short for `Gleam Imperative` is
+//// to provide close alternatives to the traditional C features `while`,
 //// `do while`, `for` and `switch` but in a functional language. This will
 //// allow you to quickly port complex algorithms implemented in C or other
 //// imperative languages to Gleam. Of course, it would be best to reimplement
 //// these as functional algorithms. However, this is typically hard,
 //// error-prone and very time consuming. With this module, an initial
 //// `make-it-work` port becomes much easier. Once you get this initial port
-//// working, you can focus your energy on implementing this in a more functional
-//// way.
+//// working, you can focus your energy on implementing this in a more functional way.
 ////
 //// For examples of how to use this library see glimp_test.gleam in the test
 //// folder of the project.
@@ -23,14 +22,16 @@ import gleam/option.{type Option}
 /// It also has a `Continue` keyword that is only used in loops (`while`,
 /// `do while` and `for`). Continue means: stop executing the code in the current
 /// code block at the point where Continue is called and start a new iteration
-/// of the loop. I did not implement Continue since it is rather trivial to exit
-/// a current loop by using one big if statement.
+/// of the loop.
+/// I did not implement Continue since it is rather trivial to exit a current loop
+/// by using one big if statement.
 /// To implement Break, I created a custom type SwitchState (for Switch) and
 /// LoopState (for loops) and expect the developer to set break in SwitchState
 /// or LoopState in the code blocks of these types.
 ///
 /// 1. IMPLEMENTING SWITCH
-/// In C-syntax, the switch statement looks like this:
+/// In C-syntax, the `switch` statement looks like this:
+///
 /// switch (expression) {
 ///   case x:
 ///     // code block for case x
@@ -59,7 +60,7 @@ import gleam/option.{type Option}
 ///   If the C-code you are converting does not have a default branch then the
 ///   corresponding default function should simply return `a` (identity function).
 //
-//****** PUBLIC TYPES
+//****** IMPORTANT TYPES AND FUNCTIONS ******
 pub type CaseBlock(a, b) {
   CaseBlock(match: a, code: fn(a) -> #(b, Bool))
 }
@@ -134,18 +135,17 @@ fn switch_helper(
 }
 
 ///2. IMPLEMENTING WHILE WITH BREAK
-/// This `while` function is stack-safe and checks the pre_run_condition based
-/// on the communicated state at the beginning of an iteration of the while loop.
-/// If the condition is true then the code in the code block handed to the
-/// `while` function is run and generates a new LoopState in preparation for
-/// the next iteration. The code in the code block can throw a Break or Continue just
-/// like in C.
-/// Per the C definition:
-/// - Break stops the entire while loop but preserves the state up to the point of the break statement.
-/// - Continue stops the current iteration of the while function loop; preserves the state up to the point of calling
-///   Continue and starts a new iteration of the while loop.
-/// Since Break and Continue can happen at any place in the code block, it is up to the user of this while function to
-/// preserve the state (as a BreakState) up to the point of calling Break or Continue.
+/// In C syntax, `while` is defined as:
+///
+/// while (condition) {
+///  // code block to be executed
+///}
+///
+/// The `while` function in Gleam is stack-safe and checks the pre_run_condition
+/// based on the communicated state at the beginning of an iteration of the while loop.
+/// If the condition is true then the code in the code block handed to the `while`
+/// function is run and generates a new LoopState in preparation for the next iteration.
+/// The code in the code block can throw a Break just like in C.
 pub fn while(
   // LoopState manages both the actual state (a) as well as whether or not Break was called.
   state state: a,
@@ -188,20 +188,24 @@ fn while_helper(
   }
 }
 
-/// This `do while` function is stack-safe and checks the condition based on the communicated state at the end of
-/// an iteration of the while loop.
-/// If the condition is true then the code in the code block handed to the `do while` function is run and generates a
-/// new state in preparation for the next iteration. The code in the code block can throw a Break or Continue just
-/// like in C.
-/// Per the C definition:
-/// - Break stops the entire while loop but preserves the state up to the point of the break statement.
-/// - Continue stops the current iteration of the while function loop; preserves the state up to the point of calling
-///   Continue and starts a new iteration of the while loop.
-/// Since Break and Continue can happen at any place in the code block, it is up to the user of this while function to
-/// preserve the state (as a BreakState) up to the point of calling Break or Continue.
-/// This `do while` function checks the condition using the communicated state at the end
-/// of an iteration. It therefore runs the code given to the `do while` function AT LEAST ONCE.
-/// Just as the other while function, it is stack-safe.
+///3. IMPLEMENTING DO WHILE WITH BREAK
+/// In C, the syntax for `do while` is:
+///
+/// do {
+///  // code block to be executed
+/// }
+/// while (condition);
+///
+/// This corresponding `do while` function in Gleam is stack-safe and checks the
+/// condition based on the communicated state at the end of an iteration of the
+/// while loop. It therefore runs the code in the `do while` function AT LEAST ONCE.
+/// If the condition is true then the new state generated by the code is handed to
+/// the next iteration of the `do while` loop and used with the next run of the code.
+/// The code in the code block can throw a Break just like in C. If the condition is
+/// false or break is true then the new state is returned and the loop stops.
+/// Note that ending the loop returns the new state. This may or may not be desired.
+/// The alternative is returning the old state. Let me know if there is a desire for
+/// that feature.
 pub fn do_while(
   state state: a,
   code_to_run code_to_run: fn(a) -> LoopState(a),
@@ -239,25 +243,24 @@ fn do_while_helper(
   }
 }
 
-/// This `for` function checks the condition using the communicated state at the beginning
-/// of an iteration.
-/// If the condition is true then the code handed to the `for` function is run. At the end of a run,
-/// a new state is generated that is used for the next iteration.
-/// If the condition is false then the code returns the final state and stops.
-/// Just as the other functions, this for loop is stack-safe.
-/// NOTE: There should not be a great need for `for` loops in a functional language. Use Map, reduce and folds instead.
-/// This for loop is here to be able to translate algorithms from C to Gleam.
+///4. IMPLEMENTING FOR WITH BREAK
+/// In C, a `for`loop is defined as:
 ///
 /// for (initialization; condition; increment) {
 /// // code block to be executed
 /// }
-/// initialization is executed (one time) before the execution of the code block.
-/// condition defines the condition for executing the code block.
-/// increment is executed (every time) after the code block has been executed.
+/// The initialization is executed (one time) before the execution of the code block.
+/// The condition defines the condition for executing the code block.
+/// And the increment code is executed (every time) after the code block has run.
 ///
-/// for (i = 0; i < 5; i++) {
-///  printf("%d\n", i);
-/// }
+/// In Gleam, the `for` function checks the condition using the communicated state at the
+/// beginning of an iteration.
+/// If the condition is true then the code block handed to the `for` function is run.
+/// At the end of a run, a new state is generated that is used for the next
+/// iteration.
+/// If the condition is false or break is true then the code returns the final state and stops.
+/// Just as the while functions, this `for` function is stack-safe.
+///
 pub fn for(
   //initialization
   state state: a,
@@ -265,20 +268,20 @@ pub fn for(
   pre_run_condition pre_run_condition: fn(a) -> Bool,
   code_to_run code_to_run: fn(a) -> LoopState(a),
   //increment
-  post_run_code post_run_code: fn(a) -> LoopState(a),
+  increment_code post_run_code: fn(a) -> LoopState(a),
 ) -> a {
   let transformed_state = LoopState(state: state, break: False)
   let transformed_pre_run_condition =
     transform_pre_run_condition(pre_run_condition)
   let transformed_code_to_run = transform_code_to_run(code_to_run)
-  let transformed_post_run_code = transform_code_to_run(post_run_code)
+  let transformed_increment_code = transform_code_to_run(post_run_code)
 
   let result =
     for_helper(
       state: transformed_state,
       transformed_pre_run_condition: transformed_pre_run_condition,
       transformed_code_to_run: transformed_code_to_run,
-      transformed_post_run_code: transformed_post_run_code,
+      transformed_increment_code: transformed_increment_code,
     )
   case result {
     LoopState(a, _) -> a
@@ -291,37 +294,37 @@ fn for_helper(
     Bool,
   transformed_code_to_run transformed_code_to_run: fn(LoopState(a)) ->
     LoopState(a),
-  transformed_post_run_code transformed_post_run_code: fn(LoopState(a)) ->
+  transformed_increment_code transformed_increment_code: fn(LoopState(a)) ->
     LoopState(a),
 ) -> LoopState(a) {
   case transformed_pre_run_condition(state) {
     False -> state
     True -> {
       let intermediate_state = transformed_code_to_run(state)
-      let new_state = transformed_post_run_code(intermediate_state)
+      let new_state = transformed_increment_code(intermediate_state)
       for_helper(
         state: new_state,
         transformed_pre_run_condition: transformed_pre_run_condition,
         transformed_code_to_run: transformed_code_to_run,
-        transformed_post_run_code: transformed_post_run_code,
+        transformed_increment_code: transformed_increment_code,
       )
     }
   }
 }
 
-///****** HELPER FUNCTIONS AND TYPES
+///****** HELPER FUNCTIONS AND TYPES ******
 type TransformedCaseBlock(a, b) {
   TransformedCaseBlock(match: a, transformed_code: fn(a) -> SwitchState(a, b))
 }
 
-//SwitchState allows us to take the return (case_return and break) of one iteration of
-//the case loop into the next iteration in the Switch_helper function to both handle
-//break = True and break = False in the previous iteration of the case loop.
+//SwitchState allows us to take the return (case_return and break) of one iteration
+//of the case loop into the next iteration in the Switch_helper function to both
+//handle break = True and break = False in the previous iteration of the case loop.
 type SwitchState(a, b) {
   SwitchState(expression: a, case_return: Option(b), break: Bool)
 }
 
-// Transforms a case into a more complex case structure for the switch_helper function
+// Transforms a case into a more complex case structure for the switch_helper function.
 fn transform_case(case_block: CaseBlock(a, b)) -> TransformedCaseBlock(a, b) {
   let value = case_block.match
   let original_fn = case_block.code
@@ -339,7 +342,8 @@ fn transform_case(case_block: CaseBlock(a, b)) -> TransformedCaseBlock(a, b) {
   TransformedCaseBlock(value, new_fn)
 }
 
-/// Transforms the default function in the switch statement into a more complex structure for the switch_helper function
+/// Transforms the default function in the switch statement into a more complex
+/// structure for the switch_helper function.
 fn transform_default(original_fn: fn(a) -> b) -> fn(a) -> SwitchState(a, b) {
   let new_fn = fn(val) {
     let result = original_fn(val)
@@ -349,7 +353,8 @@ fn transform_default(original_fn: fn(a) -> b) -> fn(a) -> SwitchState(a, b) {
   //return value of the function transform_default
 }
 
-// Transforms a code block into a code block that can handle breaks for the helper functions
+// Transforms a code block into a code block that can handle breaks for the
+// helper functions.
 fn transform_code_to_run(
   original_fn: fn(a) -> LoopState(a),
 ) -> fn(LoopState(a)) -> LoopState(a) {
@@ -366,7 +371,7 @@ fn transform_code_to_run(
   }
 }
 
-// Transforms the pre-run condition into a more complex structure to handle break
+// Transforms the pre-run condition into a more complex structure to handle break.
 fn transform_pre_run_condition(
   original_fn: fn(a) -> Bool,
 ) -> fn(LoopState(a)) -> Bool {
