@@ -4,9 +4,9 @@ version = "1.0.0"
 # Fill out these fields if you intend to generate HTML documentation or publish
 # your project to the Hex package manager.
 #
-# description = "Imperative C (switch, while, do while, for, break) in Gleam"
-# licences = ["Apache-2.0"]
-# repository = { type = "github", user = "DriesDhooghe", repo = "glimp" }
+description = "Imperative C `switch`, `while`, `do while`, `for` and `break` in Gleam"
+licences = ["Apache-2.0"]
+repository = { type = "github", user = "DriesDhooghe", repo = "glimp" }
 # links = [{ title = "Website", href = "" }]
 #
 # For a full reference of all the available options, you can have a look at
