@@ -4,15 +4,9 @@
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/glimp/)
 
 ```sh
-gleam add glimp@1
+gleam add glimp
 ```
-```gleam
-import glimp
-
-pub fn main() {
-  // TODO: An example of the project in use
-}
-```
+Check the test folder for examples on how to use these functions.
 
 Further documentation can be found at <https://hexdocs.pm/glimp>.
 
