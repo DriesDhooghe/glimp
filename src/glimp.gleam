@@ -15,6 +15,16 @@ import gleam/bool
 import gleam/list
 import gleam/option.{type Option}
 
+//****** IMPORTANT TYPES AND FUNCTIONS ******
+pub type CaseBlock(a, b) {
+  CaseBlock(match: a, code: fn(a) -> #(b, Bool))
+}
+
+pub type LoopState(a) {
+  LoopState(state: a, break: Bool)
+  //a is the state the developer is managing
+}
+
 /// C has a keyword `Break` that is used in switch statements and in `while`,
 /// `do while` and `for` loops. It means: stop executing the code in the code
 /// block at the point where Break is called and exit the case branch (switch)
@@ -29,7 +39,7 @@ import gleam/option.{type Option}
 /// LoopState (for loops) and expect the developer to set break in SwitchState
 /// or LoopState in the code blocks of these types.
 ///
-/// 1. IMPLEMENTING SWITCH
+/// IMPLEMENTING SWITCH
 /// In C-syntax, the `switch` statement looks like this:
 ///
 /// switch (expression) {
@@ -59,17 +69,6 @@ import gleam/option.{type Option}
 ///   like it is in C.
 ///   If the C-code you are converting does not have a default branch then the
 ///   corresponding default function should simply return `a` (identity function).
-//
-//****** IMPORTANT TYPES AND FUNCTIONS ******
-pub type CaseBlock(a, b) {
-  CaseBlock(match: a, code: fn(a) -> #(b, Bool))
-}
-
-pub type LoopState(a) {
-  LoopState(state: a, break: Bool)
-  //a is the state the developer is managing
-}
-
 pub fn switch(
   expression expression: a,
   cases cases: List(CaseBlock(a, b)),
@@ -134,7 +133,7 @@ fn switch_helper(
   }
 }
 
-///2. IMPLEMENTING WHILE WITH BREAK
+///IMPLEMENTING WHILE WITH BREAK
 /// In C syntax, `while` is defined as:
 ///
 /// while (condition) {
@@ -188,7 +187,7 @@ fn while_helper(
   }
 }
 
-///3. IMPLEMENTING DO WHILE WITH BREAK
+///IMPLEMENTING DO WHILE WITH BREAK
 /// In C, the syntax for `do while` is:
 ///
 /// do {
@@ -243,8 +242,8 @@ fn do_while_helper(
   }
 }
 
-///4. IMPLEMENTING FOR WITH BREAK
-/// In C, a `for`loop is defined as:
+///IMPLEMENTING FOR WITH BREAK
+/// In C, a `for` loop is defined as:
 ///
 /// for (initialization; condition; increment) {
 /// // code block to be executed
